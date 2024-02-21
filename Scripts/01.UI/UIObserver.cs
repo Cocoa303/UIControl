@@ -10,10 +10,9 @@ namespace UI.Inherited.Interface
 
     public interface Subject : StateControl
     {
-        public void Register(int hash);
-        public void UnRegister(int hash);
+        public void Register(UIObserver observer);
+        public void UnRegister(UIObserver observer);
         public void CallObservers(System.Action<UIObserver> action);
-        public void ShowOrder(List<int> hashs);
     }
 
     public interface UIObserver : StateControl

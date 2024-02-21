@@ -60,9 +60,10 @@ namespace UI.Inherited
         [SerializeField] protected Button closeButton;
         [SerializeField] protected Production production;
 
-        private System.Action openCallback;
-        private System.Action closeCallback;
-        private System.Action forceCloseCallback;
+        public delegate void UICallback(BaseUI ui);
+        private UICallback openCallback;
+        private UICallback closeCallback;
+        private UICallback forceCloseCallback;
 
         private Coroutine openProduction;
         private Coroutine closeProduction;
@@ -159,14 +160,14 @@ namespace UI.Inherited
                 closeProduction = StartCoroutine(CloseProgress(distroy));
             }
         }
-        public void ForceClose(bool distroy ,System.Action closeCallback)
+        public void ForceClose(bool distroy , UICallback closeCallback)
         {
             production.ForceCloseOn();
             forceCloseCallback = closeCallback;
 
             Close(distroy);
         }
-        public void SetEvent(System.Action openCallback, System.Action closeCallback)
+        public void SetEvent(UICallback openCallback, UICallback closeCallback)
         {
             this.openCallback = openCallback;
             this.closeCallback = closeCallback;
@@ -183,10 +184,10 @@ namespace UI.Inherited
             yield return new WaitUntil(() => production.IsOpenRunning == true);
             yield return new WaitUntil(() => production.IsOpenRunning == false);
 
-            openCallback?.Invoke();
+            openCallback?.Invoke(this);
             openCallback = null;
 
-            subject.Register(hash);
+            subject.Register(this);
             openProduction = null;
         }
         IEnumerator CloseProgress(bool destroy)
@@ -200,10 +201,10 @@ namespace UI.Inherited
             yield return new WaitUntil(() => production.IsCloseRunning == true);
             yield return new WaitUntil(() => production.IsCloseRunning == false);
 
-            closeCallback?.Invoke();
+            closeCallback?.Invoke(this);
             closeCallback = null;
 
-            subject.UnRegister(hash);
+            subject.UnRegister(this);
 
             if (destroy) { Destroy(gameObject); }
             else
@@ -212,7 +213,7 @@ namespace UI.Inherited
             }
             if(production.ForceCloseFlag)
             {
-                forceCloseCallback?.Invoke();
+                forceCloseCallback?.Invoke(this);
                 forceCloseCallback = null;
 
                 production.ForceCloseOff();
@@ -226,7 +227,9 @@ namespace UI.Inherited
             return $"[ ID\t: {id} ]\n" +
                     $"[ Hash\t\t: {hash} ]\n" +
                     $"[ Priority\t: {priority} ]" +
-                    $"[ Flag\t\t: {flag.GetHasString()} ]";
+                    $"[ Flag\t\t: {flag.GetHasString()} ]" +
+                    $"[ IsOpenning\t: {IsOpenning} ]" +
+                    $"[ IsClosing\t: {IsClosing} ]";
         }
 
         public void ShowState()
